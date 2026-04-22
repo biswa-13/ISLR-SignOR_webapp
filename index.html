@@ -1,0 +1,104 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SignSense AI</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="manifest" href="manifest.json">
+    <!-- Tailwind CSS is bundled locally -->
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            margin: 0;
+            overflow: hidden;
+            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .safe-top { padding-top: env(safe-area-inset-top); }
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+        
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(0,0,0,0.05);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(79, 70, 229, 0.4);
+          border-radius: 20px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(79, 70, 229, 0.8);
+        }
+
+        .stroke-round {
+          stroke-linecap: round;
+        }
+
+        .shadow-glow {
+          filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.6));
+        }
+
+        /* Smooth reveal for terminal items */
+        @keyframes reveal {
+          from { opacity: 0; transform: translateX(-5px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        .font-mono > div {
+          animation: reveal 0.3s ease-out forwards;
+        }
+    </style>
+    <script>
+      window.onerror = function(msg, url, lineNo, columnNo, error) {
+        console.error('Global Error:', msg, 'at', url, ':', lineNo, ':', columnNo, error);
+        const errorDiv = document.createElement('div');
+        errorDiv.style.position = 'fixed';
+        errorDiv.style.top = '0';
+        errorDiv.style.left = '0';
+        errorDiv.style.width = '100%';
+        errorDiv.style.backgroundColor = 'red';
+        errorDiv.style.color = 'white';
+        errorDiv.style.padding = '10px';
+        errorDiv.style.zIndex = '9999';
+        errorDiv.innerText = 'Runtime Error: ' + msg + ' (See console for details)';
+        document.body.appendChild(errorDiv);
+        return false;
+      };
+      window.onunhandledrejection = function(event) {
+        console.error('Unhandled Rejection:', event.reason);
+      };
+    </script>
+    <script>
+      (function() {
+        var scripts = [
+          '/lib/mediapipe/holistic/holistic.js',
+          '/lib/mediapipe/camera_utils/camera_utils.js',
+          '/lib/mediapipe/drawing_utils/drawing_utils.js'
+        ];
+        var loaded = 0;
+        scripts.forEach(function(src) {
+          var s = document.createElement('script');
+          s.src = src;
+          s.async = false;
+          s.onload = function() {
+            loaded++;
+            if (loaded === scripts.length) {
+                window.dispatchEvent(new Event('mediapipe_loaded'));
+            }
+          };
+          document.head.appendChild(s);
+        });
+      })();
+    </script>
+</head>
+<body>
+    <div id="root"></div>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>

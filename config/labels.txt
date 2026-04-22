@@ -1,0 +1,50 @@
+0. Dog
+1. loud
+2. Car
+3. Election
+4. train ticket
+5. House
+6. Death
+7. quiet
+8. Court
+9. Store or Shop
+10. Window
+11. happy
+12. Pen
+13. Bank
+14. Hat
+15. Bird
+16. I
+17. Paint
+18. T-Shirt
+19. Shoes
+20. it
+21. you (plural)
+22. Red
+23. Hello
+24. Cow
+25. Good Morning
+26. Fan
+27. Black
+28. Cell phone
+29. Thank you
+30. White
+31. Father
+32. Summer
+33. Fall
+34. Brother
+35. Monday
+36. Boy
+37. Girl
+38. Year
+39. long
+40. short
+41. big large
+42. Teacher
+43. small little
+44. Time
+45. hot
+46. Priest
+47. new
+48. good
+49. dry

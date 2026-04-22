@@ -1,0 +1,7 @@
+{
+  "name": "SignSense AI - 75_keypoint_ISLR",
+  "description": "Real-time sign language recognition workspace. Version: 75_keypoint_ISLR. Accommodates 75 points (33 Pose, 21 LH, 21 RH).",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

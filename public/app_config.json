@@ -1,0 +1,53 @@
+
+{
+  "app_settings": {
+    "app_name": "SignSense AI: 75_keypoint_ISLR",
+    "version": "2.1.0-75kp",
+    "debug_mode": true
+  },
+  "model_config": {
+    "profile": "precise",
+    "target_frames": 64,
+    "input_shape": [1, 64, 225],
+    "labels": [
+      "Dog", "loud", "Car", "Election", "train ticket", "House", "Death", "quiet", "Court", "Store or Shop", 
+      "Window", "happy", "Pen", "Bank", "Hat", "Bird", "I", "Paint", "T-Shirt", "Shoes", 
+      "it", "you (plural)", "Red", "Hello", "Cow", "Good Morning", "Fan", "Black", "Cell phone", "Thank you", 
+      "White", "Father", "Summer", "Fall", "Brother", "Monday", "Boy", "Girl", "Year", "long", 
+      "short", "big large", "Teacher", "small little", "Time", "hot", "Priest", "new", "good", "dry"
+    ]
+  },
+  "keypoints_config": {
+    "profiles": {
+      "precise": {
+        "pose_indices": "ALL",
+        "face_indices": "NONE",
+        "leftHand_indices": "ALL",
+        "rightHand_indices": "ALL",
+        "total_points": 75,
+        "features": 225
+      }
+    },
+    "flattening_order": ["pose", "leftHand", "rightHand"]
+  },
+  "visual_config": {
+    "colors": {
+      "pose": "#4f46e5",
+      "hands": "#ffffff",
+      "face": "#22c55e",
+      "ready": "#22c55e",
+      "error": "#ef4444",
+      "analyzing": "#3b82f6"
+    },
+    "drawing": {
+      "landmark_radius": 1.5,
+      "line_width": 1.5,
+      "connector_line_width": 1.0
+    }
+  },
+  "inference_logic": {
+    "confidence_threshold": 0.30,
+    "min_hand_movement": 0.005,
+    "prediction_cooldown_ms": 2000
+  }
+}
