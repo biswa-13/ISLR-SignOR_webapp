@@ -41,6 +41,7 @@ export interface AppConfig {
   app_settings: {
     app_name: string;
     version: string;
+    engine?: string;
     debug_mode: boolean;
   };
   model_config: {

@@ -1,20 +1,69 @@
-
 {
   "app_settings": {
-    "app_name": "SignSense AI: 75_keypoint_ISLR",
-    "version": "2.1.0-75kp",
+    "app_name": "SignOR",
+    "version": "v1.0",
+    "engine": "SignOR_75kp",
     "debug_mode": true
   },
   "model_config": {
     "profile": "precise",
     "target_frames": 64,
-    "input_shape": [1, 64, 225],
+    "input_shape": [
+      1,
+      64,
+      225
+    ],
     "labels": [
-      "Dog", "loud", "Car", "Election", "train ticket", "House", "Death", "quiet", "Court", "Store or Shop", 
-      "Window", "happy", "Pen", "Bank", "Hat", "Bird", "I", "Paint", "T-Shirt", "Shoes", 
-      "it", "you (plural)", "Red", "Hello", "Cow", "Good Morning", "Fan", "Black", "Cell phone", "Thank you", 
-      "White", "Father", "Summer", "Fall", "Brother", "Monday", "Boy", "Girl", "Year", "long", 
-      "short", "big large", "Teacher", "small little", "Time", "hot", "Priest", "new", "good", "dry"
+      "Dog",
+      "loud",
+      "Car",
+      "Election",
+      "train ticket",
+      "House",
+      "Death",
+      "quiet",
+      "Court",
+      "Store or Shop",
+      "Window",
+      "happy",
+      "Pen",
+      "Bank",
+      "Hat",
+      "Bird",
+      "I",
+      "Paint",
+      "T-Shirt",
+      "Shoes",
+      "it",
+      "you (plural)",
+      "Red",
+      "Hello",
+      "Cow",
+      "Good Morning",
+      "Fan",
+      "Black",
+      "Cell phone",
+      "Thank you",
+      "White",
+      "Father",
+      "Summer",
+      "Fall",
+      "Brother",
+      "Monday",
+      "Boy",
+      "Girl",
+      "Year",
+      "long",
+      "short",
+      "big large",
+      "Teacher",
+      "small little",
+      "Time",
+      "hot",
+      "Priest",
+      "new",
+      "good",
+      "dry"
     ]
   },
   "keypoints_config": {
@@ -28,7 +77,11 @@
         "features": 225
       }
     },
-    "flattening_order": ["pose", "leftHand", "rightHand"]
+    "flattening_order": [
+      "pose",
+      "leftHand",
+      "rightHand"
+    ]
   },
   "visual_config": {
     "colors": {

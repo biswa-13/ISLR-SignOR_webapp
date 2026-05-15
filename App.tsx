@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Zap, RefreshCw, Upload, Play, Settings, X, Loader2, Video, Terminal, Activity, FileVideo, Trash2, RotateCcw, ChevronRight, BarChart3, AlertCircle, Download, Bug, Volume2, VolumeX } from 'lucide-react';
+import { Zap, RefreshCw, Upload, Play, Settings, X, Loader2, Video, Terminal, Activity, FileVideo, Trash2, RotateCcw, ChevronRight, BarChart3, AlertCircle, Download, Bug, Volume2, VolumeX, SwitchCamera } from 'lucide-react';
 import JSZip from 'jszip';
+import { Capacitor } from '@capacitor/core';
 import HolisticCamera from './components/HolisticCamera';
 import { signEngine } from './services/SignEngine';
 import { videoProcessor } from './services/VideoProcessor';
@@ -18,6 +19,7 @@ interface ProcessLog {
 
 const App: React.FC = () => {
   console.log("App: Component rendering...");
+  const isNative = Capacitor.isNativePlatform();
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [appMode, setAppMode] = useState<AppMode>('LIVE');
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -39,6 +41,7 @@ const App: React.FC = () => {
   const [debugFrames, setDebugFrames] = useState<string[]>([]);
   const [debugMode, setDebugMode] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(true);
+  const [showMask, setShowMask] = useState(true);
   const ttsEnabledRef = useRef(true);
   
   const lastStatsUpdate = useRef<number>(0);
@@ -58,6 +61,9 @@ const App: React.FC = () => {
       .then(data => {
         console.log("App: Config loaded successfully:", data);
         setConfig(data);
+        if (data.app_settings?.app_name) {
+          document.title = data.app_settings.app_name;
+        }
       })
       .catch(err => {
         console.error("App: Failed to load config:", err);
@@ -261,28 +267,30 @@ const App: React.FC = () => {
     addLog(`>> DEBUG MODE: ${nextState ? 'ENABLED' : 'DISABLED'}`, nextState ? 'success' : 'info');
   };
 
-  if (!config) return <div className="h-screen bg-slate-950 flex items-center justify-center text-indigo-400 font-black tracking-widest uppercase text-xs italic">SignSense Booting...</div>;
+  if (!config) return <div className="h-screen bg-slate-950 flex items-center justify-center text-indigo-400 font-black tracking-widest uppercase text-xs italic">System Booting...</div>;
 
   const isNA = prediction?.word === 'NA' || prediction?.word === 'ERROR';
 
   return (
     <div className="flex flex-col h-screen w-screen bg-slate-950 text-slate-100 font-sans selection:bg-indigo-500/30 overflow-hidden">
       <header className="absolute top-4 inset-x-4 flex items-center justify-between z-50 pointer-events-none">
-        <div className="flex items-center gap-2 bg-slate-900/90 backdrop-blur-xl border border-slate-800 p-1.5 pr-3 rounded-lg pointer-events-auto shadow-2xl">
-          <div className="p-1 bg-indigo-600 rounded shadow-lg shadow-indigo-600/30"><Zap className="w-3.5 h-3.5 text-white" /></div>
-          <h1 className="text-[9px] font-black uppercase tracking-[0.2em] text-white italic">{config.app_settings.app_name}</h1>
+        <div className="h-10 flex items-center justify-center bg-slate-900/90 backdrop-blur-xl border border-slate-800 px-5 rounded-xl pointer-events-auto shadow-2xl">
+          <div className="flex flex-col justify-center items-center gap-0.5">
+            <h1 className="text-[12px] font-black uppercase tracking-[0.15em] text-white italic leading-none">{config.app_settings.app_name}</h1>
+            <span className="text-[7px] font-bold text-indigo-400/90 uppercase tracking-[0.2em] leading-none">{config.app_settings.version}</span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-1.5 pointer-events-auto bg-slate-900/90 backdrop-blur-xl border border-slate-800 p-1 rounded-xl shadow-xl">
+        <div className="h-10 flex items-center gap-1 bg-slate-900/90 backdrop-blur-xl border border-slate-800 p-1 rounded-xl shadow-xl pointer-events-auto">
             <button 
                 onClick={() => { setAppMode('LIVE'); handleReset(); }}
-                className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all flex items-center gap-2 ${appMode === 'LIVE' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
+                className={`h-full px-4 rounded-lg text-[9px] font-black uppercase transition-all flex items-center justify-center gap-2 ${appMode === 'LIVE' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'}`}
             >
                 <Video className="w-3 h-3" /> Live
             </button>
             <button 
                 onClick={() => { setAppMode('UPLOAD'); handleReset(); }}
-                className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all flex items-center gap-2 ${appMode === 'UPLOAD' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
+                className={`h-full px-4 rounded-lg text-[9px] font-black uppercase transition-all flex items-center justify-center gap-2 ${appMode === 'UPLOAD' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'}`}
             >
                 <Upload className="w-3 h-3" /> Batch
             </button>
@@ -290,54 +298,57 @@ const App: React.FC = () => {
             <div className="w-px h-4 bg-slate-800 mx-1" />
             
             <button 
-                onClick={toggleDebugMode}
-                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all flex items-center gap-2 ${debugMode ? 'bg-amber-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
-                title="Toggle Debug Mode"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className={`h-full px-3 rounded-lg text-[9px] font-black uppercase transition-all flex items-center justify-center gap-2 ${isSidebarOpen ? 'bg-slate-800 text-white' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'}`}
+                title="Settings"
             >
-                <Bug className="w-3 h-3" /> {debugMode ? 'Debug ON' : 'Debug'}
+                <Settings className="w-3 h-3" /> 
+                <span className="hidden md:inline">Settings</span>
             </button>
         </div>
         
-        <div className="flex items-center gap-1.5 pointer-events-auto">
+        <div className="h-10 flex items-center pointer-events-auto">
           {appMode === 'LIVE' && (
-            <button onClick={() => setFacingMode(f => f === 'user' ? 'environment' : 'user')} className="p-2 bg-slate-900/90 border border-slate-800 rounded-lg shadow-xl hover:bg-slate-800 transition-colors"><RefreshCw className="w-3.5 h-3.5 text-indigo-400" /></button>
+            <button onClick={() => setFacingMode(f => f === 'user' ? 'environment' : 'user')} className="h-full aspect-square flex items-center justify-center bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-xl shadow-xl hover:bg-slate-800 transition-colors" title="Switch Camera">
+              <SwitchCamera className="w-4 h-4 text-indigo-400" />
+            </button>
           )}
-          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 lg:hidden bg-slate-900/90 border border-slate-800 rounded-lg hover:bg-slate-800 transition-colors"><Settings className="w-3.5 h-3.5 text-indigo-400" /></button>
         </div>
       </header>
 
       <main className="flex-1 relative flex overflow-hidden">
         {/* Sidebar with Real-time Rankings */}
         <div className={`
-          fixed lg:relative lg:flex z-40 lg:z-10 w-56 h-full border-r border-slate-800/50 bg-slate-950/95 lg:bg-transparent backdrop-blur-xl 
-          transition-transform duration-300 ease-in-out
-          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          absolute z-40 top-20 left-4 h-[calc(100%-6rem)] rounded-2xl border border-slate-800/80 bg-slate-950/95 backdrop-blur-xl shadow-[0_0_40px_rgba(0,0,0,0.5)]
+          transition-all duration-300 ease-in-out overflow-hidden
+          ${isSidebarOpen ? 'translate-x-0 w-56 opacity-100 pointer-events-auto' : '-translate-x-[120%] w-56 opacity-0 pointer-events-none'}
         `}>
-          <div className="flex flex-col p-4 w-full space-y-1 pt-24 custom-scrollbar overflow-y-auto">
-            <h2 className="text-[7px] font-black uppercase tracking-[0.3em] text-slate-600 mb-2 px-1 italic">Diagnostic</h2>
+          <div className="flex flex-col p-4 w-56 space-y-1 pt-4 custom-scrollbar overflow-y-auto h-full">
+            <h2 className="text-[7px] font-black uppercase tracking-[0.3em] text-slate-600 mb-2 px-1 italic">Settings</h2>
             
-            <div className="flex items-center justify-between px-1 py-1.5 border-b border-slate-900/50">
-                <span className="text-[8px] text-slate-500 uppercase font-bold">Engine</span>
-                <span className={`text-[8px] font-black ${engineStatus.includes('READY') ? 'text-green-500' : 'text-indigo-500'}`}>{engineStatus}</span>
-            </div>
-            <div className="flex items-center justify-between px-1 py-1.5 border-b border-slate-900/50">
-                <span className="text-[8px] text-slate-500 uppercase font-bold">Frequency</span>
-                <span className="text-[9px] font-mono text-slate-400">{appMode === 'LIVE' ? `${fps} FPS` : 'OFFLINE'}</span>
-            </div>
-
-            <div className="flex items-center justify-between px-1 py-1.5 border-b border-slate-900/50">
-                <span className="text-[8px] text-slate-500 uppercase font-bold">Debug Mode</span>
-                <button 
-                  onClick={toggleDebugMode}
-                  className={`p-1 rounded transition-colors ${debugMode ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-500'}`}
+            <div className="flex items-center justify-between px-1 py-2 border-b border-slate-900/50">
+                <span className="text-[8px] text-slate-500 uppercase font-bold">Show Mask</span>
+                <div 
+                    onClick={() => setShowMask(!showMask)}
+                    className={`w-8 h-4 flex items-center rounded-full p-0.5 cursor-pointer transition-colors ${showMask ? 'bg-indigo-600' : 'bg-slate-800'}`}
                 >
-                  <Bug className="w-3 h-3" />
-                </button>
+                    <div className={`bg-white w-3 h-3 rounded-full shadow-md transform transition-transform ${showMask ? 'translate-x-4' : 'translate-x-0'}`} />
+                </div>
             </div>
 
-            <div className="flex items-center justify-between px-1 py-1.5 border-b border-slate-900/50">
-                <span className="text-[8px] text-slate-500 uppercase font-bold">Text-to-Speech</span>
-                <div className="flex items-center gap-1.5">
+            <div className="flex items-center justify-between px-1 py-2 border-b border-slate-900/50">
+                <span className="text-[8px] text-slate-500 uppercase font-bold">Debug Mode</span>
+                <div 
+                    onClick={toggleDebugMode}
+                    className={`w-8 h-4 flex items-center rounded-full p-0.5 cursor-pointer transition-colors ${debugMode ? 'bg-amber-600' : 'bg-slate-800'}`}
+                >
+                    <div className={`bg-white w-3 h-3 rounded-full shadow-md transform transition-transform ${debugMode ? 'translate-x-4' : 'translate-x-0'}`} />
+                </div>
+            </div>
+
+            <div className="flex items-center justify-between px-1 py-2 border-b border-slate-900/50">
+                <span className="text-[8px] text-slate-500 uppercase font-bold">Sign To Speech</span>
+                <div className="flex items-center gap-2">
                   <button 
                     onClick={() => ttsService.speak("Audio testing.")}
                     className="p-1 rounded bg-slate-800 text-slate-400 hover:text-indigo-400 transition-colors"
@@ -345,14 +356,25 @@ const App: React.FC = () => {
                   >
                     <Play className="w-3 h-3" />
                   </button>
-                  <button 
-                    onClick={() => setTtsEnabled(!ttsEnabled)}
-                    className={`p-1 rounded transition-colors ${ttsEnabled ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-500'}`}
-                    title={ttsEnabled ? "Disable TTS" : "Enable TTS"}
+                  <div 
+                      onClick={() => setTtsEnabled(!ttsEnabled)}
+                      className={`w-8 h-4 flex items-center rounded-full p-0.5 cursor-pointer transition-colors ${ttsEnabled ? 'bg-indigo-600' : 'bg-slate-800'}`}
                   >
-                    {ttsEnabled ? <Volume2 className="w-3 h-3" /> : <VolumeX className="w-3 h-3" />}
-                  </button>
+                      <div className={`bg-white w-3 h-3 rounded-full shadow-md transform transition-transform ${ttsEnabled ? 'translate-x-4' : 'translate-x-0'}`} />
+                  </div>
                 </div>
+            </div>
+
+            <h2 className="text-[7px] font-black uppercase tracking-[0.3em] text-slate-600 mb-2 mt-6 px-1 italic">Status</h2>
+            {config.app_settings.engine && (
+              <div className="flex items-center justify-between px-1 py-1.5 border-b border-slate-900/50">
+                  <span className="text-[8px] text-slate-500 uppercase font-bold">Engine</span>
+                  <span className="text-[8px] font-black text-indigo-400">{config.app_settings.engine}</span>
+              </div>
+            )}
+            <div className="flex items-center justify-between px-1 py-1.5 border-b border-slate-900/50">
+                <span className="text-[8px] text-slate-500 uppercase font-bold">Frequency</span>
+                <span className="text-[9px] font-mono text-slate-400">{appMode === 'LIVE' ? `${fps} FPS` : 'OFFLINE'}</span>
             </div>
 
             {debugMode && debugFrames.length > 0 && (
@@ -365,32 +387,36 @@ const App: React.FC = () => {
             )}
 
             {/* Top 10 Real-time Rankings Section */}
-            <h2 className="text-[7px] font-black uppercase tracking-[0.3em] text-slate-600 mb-2 mt-6 px-1 italic">Real-time Rankings</h2>
-            <div className="space-y-2.5 px-1 py-2">
-                {topRankings.length === 0 ? (
-                    <div className="py-8 flex flex-col items-center justify-center opacity-20">
-                        <BarChart3 className="w-6 h-6 mb-2" />
-                        <span className="text-[6px] font-bold uppercase tracking-widest">Awaiting Input</span>
-                    </div>
-                ) : (
-                    topRankings.map((rank, i) => (
-                        <div key={rank.word} className="space-y-1 group">
-                            <div className="flex justify-between items-end">
-                                <span className={`text-[9px] font-black uppercase transition-colors ${i === 0 && rank.confidence > config.inference_logic.confidence_threshold ? 'text-indigo-400' : 'text-slate-400'}`}>
-                                    {i + 1}. {rank.word}
-                                </span>
-                                <span className="text-[8px] font-mono text-slate-500">{(rank.confidence * 100).toFixed(1)}%</span>
-                            </div>
-                            <div className="h-1 w-full bg-slate-900 rounded-full overflow-hidden">
-                                <div 
-                                    className={`h-full transition-all duration-700 ${i === 0 && rank.confidence > config.inference_logic.confidence_threshold ? 'bg-indigo-500 shadow-[0_0_8px_#4f46e5]' : 'bg-slate-700'}`} 
-                                    style={{ width: `${rank.confidence * 100}%` }} 
-                                />
-                            </div>
+            {!isNative && (
+              <>
+                <h2 className="text-[7px] font-black uppercase tracking-[0.3em] text-slate-600 mb-2 mt-6 px-1 italic">Real-time Rankings</h2>
+                <div className="space-y-2.5 px-1 py-2">
+                    {topRankings.length === 0 ? (
+                        <div className="py-8 flex flex-col items-center justify-center opacity-20">
+                            <BarChart3 className="w-6 h-6 mb-2" />
+                            <span className="text-[6px] font-bold uppercase tracking-widest">Awaiting Input</span>
                         </div>
-                    ))
-                )}
-            </div>
+                    ) : (
+                        topRankings.map((rank, i) => (
+                            <div key={rank.word} className="space-y-1 group">
+                                <div className="flex justify-between items-end">
+                                    <span className={`text-[9px] font-black uppercase transition-colors ${i === 0 && rank.confidence > config.inference_logic.confidence_threshold ? 'text-indigo-400' : 'text-slate-400'}`}>
+                                        {i + 1}. {rank.word}
+                                    </span>
+                                    <span className="text-[8px] font-mono text-slate-500">{(rank.confidence * 100).toFixed(1)}%</span>
+                                </div>
+                                <div className="h-1 w-full bg-slate-900 rounded-full overflow-hidden">
+                                    <div 
+                                        className={`h-full transition-all duration-700 ${i === 0 && rank.confidence > config.inference_logic.confidence_threshold ? 'bg-indigo-500 shadow-[0_0_8px_#4f46e5]' : 'bg-slate-700'}`} 
+                                        style={{ width: `${rank.confidence * 100}%` }} 
+                                    />
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+              </>
+            )}
 
             {debugMode && (
               <div className="mt-6 p-3 bg-amber-600/10 border border-amber-600/30 rounded-xl space-y-3">
@@ -441,7 +467,7 @@ const App: React.FC = () => {
                   </div>
                   <h3 className="text-xl font-black uppercase tracking-tighter text-white mb-2">Camera Access Blocked</h3>
                   <p className="text-slate-400 text-sm max-w-md leading-relaxed mb-8">
-                    SignSense requires camera access for real-time recognition. Please click the lock icon in your address bar and set Camera to "Allow".
+                    {config.app_settings.app_name} requires camera access for real-time recognition. Please click the lock icon in your address bar and set Camera to "Allow".
                   </p>
                   <button 
                     onClick={() => window.location.reload()}
@@ -458,6 +484,7 @@ const App: React.FC = () => {
                   isMirrored={isMirrored}
                   prediction={prediction}
                   isAnalyzing={isAnalyzing}
+                  showMask={showMask}
                   onViewportStatusChange={setViewportStatus}
                   onSequenceComplete={handleSequence}
                   onResults={handleResults}

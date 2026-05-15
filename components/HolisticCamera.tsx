@@ -1,5 +1,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { HolisticResults, AppConfig, ViewportStatus, PredictionResult, SessionState } from '../types';
 import { FeatureExtractor } from '../services/FeatureExtractor';
 
@@ -10,6 +11,7 @@ interface HolisticCameraProps {
   isMirrored: boolean;
   prediction: PredictionResult | null;
   isAnalyzing: boolean;
+  showMask?: boolean;
   onViewportStatusChange: (status: ViewportStatus) => void;
   onResults: (results: HolisticResults, filteredPoints: number[]) => void;
   onSequenceComplete: (sequence: number[][], debugImages?: string[]) => void;
@@ -19,9 +21,10 @@ interface HolisticCameraProps {
 }
 
 const HolisticCamera: React.FC<HolisticCameraProps> = ({ 
-  enabled, config, facingMode, isMirrored, prediction, isAnalyzing, 
+  enabled, config, facingMode, isMirrored, prediction, isAnalyzing, showMask = true,
   onViewportStatusChange, onResults, onSequenceComplete, onFpsUpdate, onDebugFrames, onError
 }) => {
+  const isNative = Capacitor.isNativePlatform();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -113,9 +116,15 @@ const HolisticCamera: React.FC<HolisticCameraProps> = ({
     return { state: 'READY', instruction: 'READY TO SIGN' };
   };
 
+  const showMaskRef = useRef<boolean>(showMask);
+
   useEffect(() => {
     configRef.current = config;
   }, [config]);
+
+  useEffect(() => {
+    showMaskRef.current = showMask;
+  }, [showMask]);
 
   useEffect(() => {
     if (!enabled) {
@@ -269,7 +278,13 @@ const HolisticCamera: React.FC<HolisticCameraProps> = ({
         }
 
         const canvasCtx = canvasRef.current?.getContext('2d');
-        if (!canvasCtx || !canvasRef.current) return;
+        if (!canvasCtx || !canvasRef.current || !results.image) return;
+
+        if (canvasRef.current.width !== results.image.width || canvasRef.current.height !== results.image.height) {
+          canvasRef.current.width = results.image.width;
+          canvasRef.current.height = results.image.height;
+        }
+
         canvasCtx.save();
         canvasCtx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
         if (isMirrored) { canvasCtx.scale(-1, 1); canvasCtx.translate(-canvasRef.current.width, 0); }
@@ -281,15 +296,17 @@ const HolisticCamera: React.FC<HolisticCameraProps> = ({
           MP_D.drawLandmarks(canvasCtx, pts, { color, lineWidth: 1, radius: 2 });
         };
 
-        drawSet(results.poseLandmarks, (window as any).POSE_CONNECTIONS, config.visual_config.colors.pose);
-        drawSet(results.leftHandLandmarks, (window as any).HAND_CONNECTIONS, config.visual_config.colors.hands);
-        drawSet(results.rightHandLandmarks, (window as any).HAND_CONNECTIONS, config.visual_config.colors.hands);
-        
-        if (results.faceLandmarks) {
-            MP_D.drawConnectors(canvasCtx, results.faceLandmarks, (window as any).FACEMESH_TESSELATION, { 
-              color: config.visual_config.colors.face, 
-              lineWidth: 0.5 
-            });
+        if (showMaskRef.current) {
+          drawSet(results.poseLandmarks, (window as any).POSE_CONNECTIONS, config.visual_config.colors.pose);
+          drawSet(results.leftHandLandmarks, (window as any).HAND_CONNECTIONS, config.visual_config.colors.hands);
+          drawSet(results.rightHandLandmarks, (window as any).HAND_CONNECTIONS, config.visual_config.colors.hands);
+          
+          if (results.faceLandmarks) {
+              MP_D.drawConnectors(canvasCtx, results.faceLandmarks, (window as any).FACEMESH_TESSELATION, { 
+                color: config.visual_config.colors.face, 
+                lineWidth: 0.5 
+              });
+          }
         }
         canvasCtx.restore();
         if (isLoading) setIsLoading(false);
@@ -332,8 +349,8 @@ const HolisticCamera: React.FC<HolisticCameraProps> = ({
           <p className="text-indigo-400 font-bold uppercase tracking-[0.3em] text-[9px]">Waking ML Sensors...</p>
         </div>
       )}
-      <video ref={videoRef} className="hidden" playsInline muted />
-      <canvas ref={canvasRef} className={`w-full h-full object-cover ${!enabled ? 'hidden' : ''}`} width={1280} height={720} />
+      <video ref={videoRef} className="absolute opacity-0 w-[1px] h-[1px] pointer-events-none -z-10" playsInline muted />
+      <canvas ref={canvasRef} className={`w-full h-full object-cover ${!enabled ? 'hidden' : ''}`} />
     </div>
   );
 };
